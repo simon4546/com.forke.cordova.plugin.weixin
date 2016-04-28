@@ -55,7 +55,7 @@ public class Weixin extends CordovaPlugin {
 
     protected IWXAPI api;
 
-    protected static CallbackContext currentCallbackContext;
+    public static CallbackContext currentCallbackContext;
 
     private String app_id;
     private static String partner_key;

@@ -57,17 +57,12 @@ public class WXPayEntryActivity extends Activity implements IWXAPIEventHandler{
     public void onResp(BaseResp resp) {
         Log.d(TAG, "onPayFinish, errCode = " + resp.errCode);
         if (resp.getType() == ConstantsAPI.COMMAND_PAY_BY_WX) {
-            Intent intent;
             try {
-                intent = new Intent(this, WXPayEntryActivity.class.getClassLoader().loadClass("com.forke.cordova.plugin.weixin.Weixin"));
-                Bundle bundle=new Bundle();
-                bundle.putInt("weixinPayRespCode",  resp.errCode);
-                bundle.putString("intentType", "com.forke.cordova.plugin.weixin.Weixin");
-                intent.putExtras(bundle);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                Log.i(TAG, "startActivity");
-                startActivity(intent);
-            } catch (ClassNotFoundException e) {
+                JSONObject res=new JSONObject();
+                res.put("type", "pay");
+                res.put("result",resp.errCode);
+                Weixin.currentCallbackContext.success(res);
+             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
