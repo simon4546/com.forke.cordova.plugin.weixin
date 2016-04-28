@@ -241,7 +241,7 @@ public class Weixin extends CordovaPlugin {
         Bundle extras = intent.getExtras();
         if (extras != null) {
             String intentType = extras.getString("intentType");
-            if ("com.justep.cordova.plugin.weixin.Weixin".equals(intentType)) {
+            if ("com.forke.cordova.plugin.weixin.Weixin".equals(intentType)) {
                 if (currentCallbackContext != null) {
                     currentCallbackContext.success(extras.getInt("weixinPayRespCode"));
                 }
