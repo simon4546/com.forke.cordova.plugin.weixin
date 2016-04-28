@@ -130,6 +130,7 @@
         <source-file src="src/android/com/forke/cordova/plugin/weixin/Weixin.java" target-dir="src/com/forke/cordova/plugin/weixin" />
         <source-file src="src/android/com/forke/cordova/plugin/weixin/PayOrder.java" target-dir="src/com/forke/cordova/plugin/weixin" />
         <source-file src="src/android/net/sourceforge/simcpux/wxapi/WXPayEntryActivity.java" target-dir="src/net/sourceforge/simcpux/wxapi" />
+        <source-file src="src/android/net/sourceforge/simcpux/AppRegister.java" target-dir="src/net/sourceforge/simcpux" />
         <source-file src="src/android/net/sourceforge/simcpux/MD5.java" target-dir="src/net/sourceforge/simcpux" />
         <source-file src="src/android/net/sourceforge/simcpux/Util.java" target-dir="src/net/sourceforge/simcpux" />
     </platform>

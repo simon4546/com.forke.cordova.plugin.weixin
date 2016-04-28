@@ -76,7 +76,7 @@ module.exports = {
     generatePrepayId: function(payInfo,onSuccess,onError){
         exec(onSuccess, onError, "Weixin", "generatePrepayId", [payInfo]);
     },
-    sendPayReq: function(prepayId,onSuccess,onError){
-        exec(onSuccess, onError, "Weixin", "sendPayReq", [{"prepayId":prepayId}]);
+    sendPayReq: function(payInfo,onSuccess,onError){
+        exec(onSuccess, onError, "Weixin", "sendPayReq", [payInfo]);
     }
 };
