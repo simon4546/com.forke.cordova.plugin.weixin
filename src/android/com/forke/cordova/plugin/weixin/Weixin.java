@@ -4,12 +4,16 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,12 +32,14 @@ import com.tencent.mm.sdk.modelpay.PayReq;
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
 
+import net.sourceforge.simcpux.MD5;
+
 public class Weixin extends CordovaPlugin {
     public static final String TAG = "Weixin";
-
+    
     public static final String ERROR_WX_NOT_INSTALLED = "未安装微信";
     public static final String ERROR_ARGUMENTS = "参数错误";
-
+    
     public static final String KEY_ARG_MESSAGE = "message";
     public static final String KEY_ARG_SCENE = "scene";
     public static final String KEY_ARG_MESSAGE_TITLE = "title";
@@ -43,7 +49,7 @@ public class Weixin extends CordovaPlugin {
     public static final String KEY_ARG_MESSAGE_MEDIA_TYPE = "type";
     public static final String KEY_ARG_MESSAGE_MEDIA_WEBPAGEURL = "webpageUrl";
     public static final String KEY_ARG_MESSAGE_MEDIA_TEXT = "text";
-
+    
     public static final int TYPE_WX_SHARING_APP = 1;
     public static final int TYPE_WX_SHARING_EMOTION = 2;
     public static final int TYPE_WX_SHARING_FILE = 3;
@@ -52,18 +58,17 @@ public class Weixin extends CordovaPlugin {
     public static final int TYPE_WX_SHARING_VIDEO = 6;
     public static final int TYPE_WX_SHARING_WEBPAGE = 7;
     public static final int TYPE_WX_SHARING_TEXT = 8;
-
+    
     protected IWXAPI api;
-
+    
     public static CallbackContext currentCallbackContext;
-
+    
     private String app_id;
     private static String partner_key;
     private static String partner_id;
     private static String app_secret;
     private static String app_key;
-    private HashMap<String, PayOrder> payOrderList = new HashMap<String, PayOrder>();
-
+    
     @Override
     public boolean execute(String action, JSONArray args,
                            CallbackContext callbackContext) throws JSONException {
@@ -82,7 +87,7 @@ public class Weixin extends CordovaPlugin {
         }
         return false;
     }
-
+    
     protected boolean sendPayReq(JSONArray args) {
         Log.i(TAG, "pay begin");
         try {
@@ -95,7 +100,7 @@ public class Weixin extends CordovaPlugin {
         }
         return true;
     }
-
+    
     protected void getWXAPI() {
         if (api == null) {
             app_id = webView.getPreferences().getString("weixinappid", "");
@@ -103,24 +108,24 @@ public class Weixin extends CordovaPlugin {
             Boolean registered = api.registerApp(webView.getPreferences().getString("weixinappid", ""));
         }
     }
-
+    
     protected boolean share(JSONArray args, CallbackContext callbackContext)
-            throws JSONException {
+    throws JSONException {
         // check if # of arguments is correct
         if (args.length() != 1) {
             callbackContext.error(ERROR_ARGUMENTS);
         }
-
+        
         final JSONObject params = args.getJSONObject(0);
         final SendMessageToWX.Req req = new SendMessageToWX.Req();
         req.transaction = String.valueOf(System.currentTimeMillis());
-
+        
         if (params.has(KEY_ARG_SCENE)) {
             req.scene = params.getInt(KEY_ARG_SCENE);
         } else {
             req.scene = SendMessageToWX.Req.WXSceneTimeline;
         }
-
+        
         // run in background
         cordova.getThreadPool().execute(new Runnable() {
             @Override
@@ -141,91 +146,126 @@ public class Weixin extends CordovaPlugin {
         });
         return true;
     }
-
+    
     protected WXMediaMessage buildSharingMessage(JSONObject message)
-            throws JSONException {
+    throws JSONException {
         URL thumbnailUrl = null;
         Bitmap thumbnail = null;
-
+        
         try {
             thumbnailUrl = new URL(message.getString(KEY_ARG_MESSAGE_THUMB));
             thumbnail = BitmapFactory.decodeStream(thumbnailUrl
-                    .openConnection().getInputStream());
-
+                                                   .openConnection().getInputStream());
+            
         } catch (MalformedURLException e1) {
             e1.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        
         WXMediaMessage wxMediaMessage = new WXMediaMessage();
         wxMediaMessage.title = message.getString(KEY_ARG_MESSAGE_TITLE);
         wxMediaMessage.description = message
-                .getString(KEY_ARG_MESSAGE_DESCRIPTION);
+        .getString(KEY_ARG_MESSAGE_DESCRIPTION);
         if (thumbnail != null) {
             wxMediaMessage.setThumbImage(thumbnail);
         }
-
+        
         // media parameters
         WXMediaMessage.IMediaObject mediaObject = null;
         JSONObject media = message.getJSONObject(KEY_ARG_MESSAGE_MEDIA);
-
+        
         // check types
         int type = media.has(KEY_ARG_MESSAGE_MEDIA_TYPE) ? media
-                .getInt(KEY_ARG_MESSAGE_MEDIA_TYPE) : TYPE_WX_SHARING_WEBPAGE;
+        .getInt(KEY_ARG_MESSAGE_MEDIA_TYPE) : TYPE_WX_SHARING_WEBPAGE;
         switch (type) {
             case TYPE_WX_SHARING_APP:
                 break;
-
+                
             case TYPE_WX_SHARING_EMOTION:
                 break;
-
+                
             case TYPE_WX_SHARING_FILE:
                 break;
-
+                
             case TYPE_WX_SHARING_IMAGE:
                 break;
-
+                
             case TYPE_WX_SHARING_MUSIC:
                 break;
-
+                
             case TYPE_WX_SHARING_VIDEO:
                 break;
-
+                
             case TYPE_WX_SHARING_TEXT:
                 mediaObject = new WXTextObject();
                 ((WXTextObject) mediaObject).text = media.getString(KEY_ARG_MESSAGE_MEDIA_TEXT);
                 break;
-
+                
             case TYPE_WX_SHARING_WEBPAGE:
             default:
                 mediaObject = new WXWebpageObject();
                 ((WXWebpageObject) mediaObject).webpageUrl = media
-                        .getString(KEY_ARG_MESSAGE_MEDIA_WEBPAGEURL);
+                .getString(KEY_ARG_MESSAGE_MEDIA_WEBPAGEURL);
         }
         wxMediaMessage.mediaObject = mediaObject;
         return wxMediaMessage;
     }
-
-
+    
+    private String genSign(List<NameValuePair> params) {
+        StringBuilder sb = new StringBuilder();
+        
+        int i = 0;
+        for (; i < params.size() - 1; i++) {
+            sb.append(params.get(i).getName());
+            sb.append('=');
+            sb.append(params.get(i).getValue());
+            sb.append('&');
+        }
+        sb.append(params.get(i).getName());
+        sb.append('=');
+        sb.append(params.get(i).getValue());
+        
+        String sha1 = MD5.getMessageDigest(sb.toString().getBytes()).toUpperCase();
+        Log.d(TAG, "genSign, md5 = " + sha1);
+        return sha1;
+    }
+    
     private void sendPayReq(JSONObject args) {
         try {
             PayReq req = new PayReq();
             req.appId = app_id;
             req.partnerId = partner_id;
             req.prepayId = args.get("prepayid").toString();
+            req.packageValue = args.get("package").toString();
             req.nonceStr = args.get("noncestr").toString();
             req.timeStamp = args.get("timestamp").toString();
-            req.packageValue = args.get("package").toString();
-            req.sign = args.get("sign").toString();
+            
+            List<NameValuePair> signParams = new LinkedList<NameValuePair>();
+            signParams.add(new BasicNameValuePair("appid", req.appId));
+            signParams.add(new BasicNameValuePair("noncestr", req.nonceStr));
+            signParams.add(new BasicNameValuePair("package", req.packageValue));
+            signParams.add(new BasicNameValuePair("partnerid", partner_id));
+            signParams.add(new BasicNameValuePair("prepayid", req.prepayId));
+            signParams.add(new BasicNameValuePair("timestamp", req.timeStamp));
+            signParams.add(new BasicNameValuePair("key", partner_key));
+            req.sign = genSign(signParams);
+            
+            
+            //req.sign = args.get("sign").toString();
+            Log.d(TAG,args.toString());
+            Log.d(TAG,partner_id);
+            Log.d(TAG,partner_key);
+            Log.d(TAG,args.get("sign").toString());
             // 在支付之前，如果应用没有注册到微信，应该先调用IWXMsg.registerApp将应用注册到微信
+            //api.registerApp(webView.getPreferences().getString("weixinappid", ""));
             api.sendReq(req);
-            currentCallbackContext.success("{\"partnerId\":\""+req.partnerId+"\",\"prepayId\":\""+req.prepayId+"\"}");
+            //currentCallbackContext.success("{\"partnerId\":\""+req.partnerId+"\",\"prepayId\":\""+req.prepayId+"\"}");
         } catch (Exception x) {
-
+            
         }
     }
-
+    
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
@@ -236,7 +276,7 @@ public class Weixin extends CordovaPlugin {
         getWXAPI();
         this.onWeixinResp(cordova.getActivity().getIntent());
     }
-
+    
     private void onWeixinResp(Intent intent) {
         Bundle extras = intent.getExtras();
         if (extras != null) {
@@ -248,7 +288,7 @@ public class Weixin extends CordovaPlugin {
             }
         }
     }
-
+    
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);

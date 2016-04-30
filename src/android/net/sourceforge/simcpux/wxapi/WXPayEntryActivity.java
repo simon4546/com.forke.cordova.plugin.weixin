@@ -1,18 +1,22 @@
 package net.sourceforge.simcpux.wxapi;
 
 
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
 import com.forke.cordova.Config;
+import com.forke.cordova.plugin.weixin.Weixin;
 import com.tencent.mm.sdk.constants.ConstantsAPI;
 import com.tencent.mm.sdk.modelbase.BaseReq;
 import com.tencent.mm.sdk.modelbase.BaseResp;
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.IWXAPIEventHandler;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
+
+import org.json.JSONObject;
 
 public class WXPayEntryActivity extends Activity implements IWXAPIEventHandler{
     
@@ -62,9 +66,10 @@ public class WXPayEntryActivity extends Activity implements IWXAPIEventHandler{
                 res.put("type", "pay");
                 res.put("result",resp.errCode);
                 Weixin.currentCallbackContext.success(res);
-             } catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        this.finish();
     }
 }
