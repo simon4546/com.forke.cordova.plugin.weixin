@@ -240,23 +240,7 @@ public class Weixin extends CordovaPlugin {
             req.packageValue = args.get("package").toString();
             req.nonceStr = args.get("noncestr").toString();
             req.timeStamp = args.get("timestamp").toString();
-            
-            List<NameValuePair> signParams = new LinkedList<NameValuePair>();
-            signParams.add(new BasicNameValuePair("appid", req.appId));
-            signParams.add(new BasicNameValuePair("noncestr", req.nonceStr));
-            signParams.add(new BasicNameValuePair("package", req.packageValue));
-            signParams.add(new BasicNameValuePair("partnerid", partner_id));
-            signParams.add(new BasicNameValuePair("prepayid", req.prepayId));
-            signParams.add(new BasicNameValuePair("timestamp", req.timeStamp));
-            signParams.add(new BasicNameValuePair("key", partner_key));
-            req.sign = genSign(signParams);
-            
-            
-            //req.sign = args.get("sign").toString();
-            Log.d(TAG,args.toString());
-            Log.d(TAG,partner_id);
-            Log.d(TAG,partner_key);
-            Log.d(TAG,args.get("sign").toString());
+            req.sign = args.get("sign").toString();
             // 在支付之前，如果应用没有注册到微信，应该先调用IWXMsg.registerApp将应用注册到微信
             //api.registerApp(webView.getPreferences().getString("weixinappid", ""));
             api.sendReq(req);
