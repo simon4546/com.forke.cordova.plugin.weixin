@@ -30,8 +30,6 @@ enum  CDVWeixinSharingType {
  **/
 
 - (void)share:(CDVInvokedUrlCommand *)command;
-- (void)getAccessToken:(CDVInvokedUrlCommand *)command;
-- (void)generatePrepayId:(CDVInvokedUrlCommand *)command;
 - (void)sendPayReq:(CDVInvokedUrlCommand *)command;
 
 @end
